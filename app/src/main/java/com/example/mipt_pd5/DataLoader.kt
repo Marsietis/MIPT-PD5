@@ -1,10 +1,12 @@
 package com.example.mipt_pd5
 
+import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
-
 
 private const val ECB_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml"
 
@@ -14,6 +16,7 @@ class DataLoader {
     // an input stream.
     @Throws(IOException::class)
     private fun downloadUrl(): InputStream? {
+        Log.d("DataLoader", "downloadUrl")
         val url = URL(ECB_URL)
         return (url.openConnection() as? HttpURLConnection)?.run {
             readTimeout = 10000
@@ -26,4 +29,17 @@ class DataLoader {
         }
     }
 
+    suspend fun loadData(): ArrayList<HashMap<String, String>> {
+        Log.d("DataLoader", "loadData")
+        return withContext(Dispatchers.IO) {
+            val inputStream = downloadUrl()
+            if (inputStream != null) {
+                val parser = Parser()
+                parser.parseXml(inputStream)
+            } else {
+                // Handle the case where inputStream is null and return an empty list
+                ArrayList()
+            }
+        }
+    }
 }
